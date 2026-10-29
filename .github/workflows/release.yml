@@ -1,0 +1,39 @@
+name: Release
+
+# Push a tag v<version> matching plugin.json to publish a GitHub Release.
+# Lithe Store's tracker picks up the release and opens an index pull request.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build archive
+        run: node scripts/package.mjs --expect-tag "$GITHUB_REF_NAME" | tee "$RUNNER_TEMP/checksums.txt"
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists; its assets are pinned by Lithe Store and are left unchanged."
+            exit 0
+          fi
+          {
+            echo "安装：在 Lithe 的插件市场（已预置 Lithe Store 社区源）搜索 mise。"
+            echo
+            echo "SHA-256："
+            echo '```'
+            sed 's#^dist/##' "$RUNNER_TEMP/checksums.txt"
+            echo '```'
+          } > "$RUNNER_TEMP/notes.md"
+          gh release create "$GITHUB_REF_NAME" dist/*.zip --title "mise $GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md"

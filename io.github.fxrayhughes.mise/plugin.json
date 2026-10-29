@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 2,
+  "id": "io.github.fxrayhughes.mise",
+  "displayName": "mise",
+  "version": "0.1.0",
+  "pluginAPIVersion": 3,
+  "requires": {
+    "toolchainSources": 1
+  },
+  "vendor": {
+    "id": "io.github.fxrayhughes",
+    "displayName": "FxRayHughes",
+    "signatureRequirement": "none"
+  },
+  "permissions": [
+    "toolchains.read"
+  ],
+  "toolchainSources": [
+    {
+      "id": "mise",
+      "displayName": "mise",
+      "installRoot": [
+        { "environment": "MISE_INSTALLS_DIR" },
+        { "environment": "MISE_DATA_DIR", "path": "installs" },
+        { "environment": "XDG_DATA_HOME", "path": "mise/installs" },
+        { "home": ".local/share/mise/installs" }
+      ],
+      "tools": [
+        { "tool": "java", "names": ["java", "core:java"], "home": "." },
+        { "tool": "node", "names": ["node", "nodejs", "core:node"], "executables": ["bin/node", "bin/npm", "bin/npx", "bin/corepack"] },
+        { "tool": "maven", "names": ["maven", "aqua:apache/maven"], "executables": ["apache-maven-*/bin/mvn"] },
+        { "tool": "gradle", "names": ["gradle", "aqua:gradle/gradle"], "executables": ["gradle-*/bin/gradle"] },
+        { "tool": "go", "names": ["go", "core:go"], "executables": ["bin/go", "bin/gofmt"] },
+        { "tool": "python", "names": ["python", "core:python"], "executables": ["bin/python3", "bin/python", "bin/pip3"] },
+        { "tool": "pnpm", "names": ["pnpm", "aqua:pnpm/pnpm"], "executables": ["pnpm"] }
+      ],
+      "versionFiles": [
+        { "name": ".mise.local.toml", "format": "miseToml" },
+        { "name": "mise.local.toml", "format": "miseToml" },
+        { "name": ".mise.toml", "format": "miseToml" },
+        { "name": "mise.toml", "format": "miseToml" },
+        { "name": "mise/config.toml", "format": "miseToml" },
+        { "name": ".mise/config.toml", "format": "miseToml" },
+        { "name": ".config/mise.toml", "format": "miseToml" },
+        { "name": ".config/mise/mise.toml", "format": "miseToml" },
+        { "name": ".config/mise/config.toml", "format": "miseToml" },
+        { "name": ".tool-versions", "format": "toolVersions" }
+      ],
+      "globalVersionFiles": [
+        {
+          "location": [
+            { "environment": "MISE_CONFIG_DIR", "path": "config.local.toml" },
+            { "environment": "XDG_CONFIG_HOME", "path": "mise/config.local.toml" },
+            { "home": ".config/mise/config.local.toml" }
+          ],
+          "format": "miseToml"
+        },
+        {
+          "location": [
+            { "environment": "MISE_GLOBAL_CONFIG_FILE" },
+            { "environment": "MISE_CONFIG_DIR", "path": "config.toml" },
+            { "environment": "XDG_CONFIG_HOME", "path": "mise/config.toml" },
+            { "home": ".config/mise/config.toml" }
+          ],
+          "format": "miseToml"
+        }
+      ]
+    }
+  ]
+}

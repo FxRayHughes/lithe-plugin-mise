@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check manifest and build the archive
+        run: node scripts/package.mjs
+      - name: Validate against Lithe Store rules
+        run: |
+          git clone --depth 1 https://github.com/Lithe-IDEA/Lithe-store "$RUNNER_TEMP/store"
+          node --input-type=module -e "
+            import { readPackageManifests, checkManifest } from '$RUNNER_TEMP/store/scripts/validate-index.mjs';
+            import { readdirSync, readFileSync } from 'node:fs';
+            const manifest = JSON.parse(readFileSync('io.github.fxrayhughes.mise/plugin.json', 'utf8'));
+            const entry = { id: manifest.id };
+            let failed = false;
+            for (const name of readdirSync('dist')) {
+              const { manifests, unsafe } = readPackageManifests('dist/' + name, entry.id);
+              const problems = [...unsafe, ...checkManifest(manifests, entry, manifest)];
+              for (const problem of problems) { console.error(name + ': ' + problem); failed = true; }
+            }
+            process.exit(failed ? 1 : 0);
+          "
