@@ -561,9 +561,10 @@ fn untrusted_config(stderr: &str) -> Option<String> {
     Some(path.unwrap_or("?").to_owned())
 }
 
-/// Length and control-character bounds shared by the reply's strings.
+/// Byte-length and control-character bounds shared by the reply's strings.
+/// Bytes are never fewer than characters, so this holds whichever Core counts.
 fn bounded(value: &str, maximum: usize) -> bool {
-    !value.is_empty() && value.chars().count() <= maximum && !value.chars().any(char::is_control)
+    !value.is_empty() && value.len() <= maximum && !value.chars().any(char::is_control)
 }
 
 /// Same matching as Core: the pattern's components against the path's last
