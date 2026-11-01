@@ -2,10 +2,13 @@
   "schemaVersion": 2,
   "id": "io.github.fxrayhughes.mise",
   "displayName": "mise",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "pluginAPIVersion": 3,
   "requires": {
-    "toolchainSources": 1
+    "toolchainProviders": 1,
+    "backend": 2,
+    "serverProcess": 1,
+    "settings": 2
   },
   "vendor": {
     "id": "io.github.fxrayhughes",
@@ -13,58 +16,150 @@
     "signatureRequirement": "none"
   },
   "permissions": [
-    "toolchains.read"
+    "backend.launch",
+    "toolchains.provide"
   ],
-  "toolchainSources": [
+  "settings": [
+    {
+      "id": "misePath",
+      "type": "file",
+      "title": "mise 路径",
+      "description": "留空时依次查找 ~/.local/bin/mise、Homebrew 和 PATH。填写后只使用这个路径。",
+      "default": "",
+      "placeholder": "自动查找 mise",
+      "section": "mise"
+    },
+    {
+      "id": "offline",
+      "type": "boolean",
+      "title": "离线查询",
+      "description": "查询时设置 MISE_OFFLINE=1，mise 不联网。",
+      "default": true,
+      "section": "mise"
+    }
+  ],
+  "toolchainProviders": [
     {
       "id": "mise",
       "displayName": "mise",
-      "installRoot": [
-        { "environment": "MISE_INSTALLS_DIR" },
-        { "environment": "MISE_DATA_DIR", "path": "installs" },
-        { "environment": "XDG_DATA_HOME", "path": "mise/installs" },
-        { "home": ".local/share/mise/installs" }
-      ],
       "tools": [
-        { "tool": "java", "names": ["java", "core:java"], "home": "." },
-        { "tool": "node", "names": ["node", "nodejs", "core:node"], "executables": ["bin/node", "bin/npm", "bin/npx", "bin/corepack"] },
-        { "tool": "maven", "names": ["maven", "aqua:apache/maven"], "executables": ["apache-maven-*/bin/mvn"] },
-        { "tool": "gradle", "names": ["gradle", "aqua:gradle/gradle"], "executables": ["gradle-*/bin/gradle"] },
-        { "tool": "go", "names": ["go", "core:go"], "executables": ["bin/go", "bin/gofmt"] },
-        { "tool": "python", "names": ["python", "core:python"], "executables": ["bin/python3", "bin/python", "bin/pip3"] },
-        { "tool": "pnpm", "names": ["pnpm", "aqua:pnpm/pnpm"], "executables": ["pnpm"] }
+        "go",
+        "gradle",
+        "java",
+        "maven",
+        "node",
+        "pnpm",
+        "python"
       ],
-      "versionFiles": [
-        { "name": ".mise.local.toml", "format": "miseToml" },
-        { "name": "mise.local.toml", "format": "miseToml" },
-        { "name": ".mise.toml", "format": "miseToml" },
-        { "name": "mise.toml", "format": "miseToml" },
-        { "name": "mise/config.toml", "format": "miseToml" },
-        { "name": ".mise/config.toml", "format": "miseToml" },
-        { "name": ".config/mise.toml", "format": "miseToml" },
-        { "name": ".config/mise/mise.toml", "format": "miseToml" },
-        { "name": ".config/mise/config.toml", "format": "miseToml" },
-        { "name": ".tool-versions", "format": "toolVersions" }
-      ],
-      "globalVersionFiles": [
+      "watchFiles": [
         {
-          "location": [
-            { "environment": "MISE_CONFIG_DIR", "path": "config.local.toml" },
-            { "environment": "XDG_CONFIG_HOME", "path": "mise/config.local.toml" },
-            { "home": ".config/mise/config.local.toml" }
-          ],
-          "format": "miseToml"
+          "pattern": "mise.toml",
+          "reader": "native"
         },
         {
-          "location": [
-            { "environment": "MISE_GLOBAL_CONFIG_FILE" },
-            { "environment": "MISE_CONFIG_DIR", "path": "config.toml" },
-            { "environment": "XDG_CONFIG_HOME", "path": "mise/config.toml" },
-            { "home": ".config/mise/config.toml" }
-          ],
-          "format": "miseToml"
+          "pattern": "mise.local.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": "mise.*.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": ".mise.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": ".mise.local.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": ".mise.*.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": "mise/config.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": "mise/config.local.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": "mise/conf.d/*.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": ".mise/config.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": ".mise/config.local.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": ".mise/conf.d/*.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": ".config/mise.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": ".config/mise.local.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": ".config/mise/config.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": ".config/mise/config.local.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": ".config/mise/mise.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": ".config/mise/conf.d/*.toml",
+          "reader": "native"
+        },
+        {
+          "pattern": ".tool-versions",
+          "reader": "compatible"
+        },
+        {
+          "pattern": ".java-version",
+          "reader": "compatible"
+        },
+        {
+          "pattern": ".node-version",
+          "reader": "compatible"
+        },
+        {
+          "pattern": ".nvmrc",
+          "reader": "compatible"
+        },
+        {
+          "pattern": ".python-version",
+          "reader": "compatible"
+        },
+        {
+          "pattern": ".sdkmanrc",
+          "reader": "compatible"
         }
       ]
     }
-  ]
+  ],
+  "backend": {
+    "launch": {
+      "kind": "packaged",
+      "path": "bin/mise-provider"
+    },
+    "arguments": [
+      "--stdio",
+      "--mise=${setting:misePath}",
+      "--offline=${setting:offline}"
+    ]
+  }
 }

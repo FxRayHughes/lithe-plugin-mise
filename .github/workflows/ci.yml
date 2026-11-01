@@ -10,13 +10,21 @@ permissions:
 
 jobs:
   package:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # lipo and codesign build the universal backend, so this runs on macOS.
+    runs-on: macos-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Add the Intel target
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - name: Format and test the backend
+        working-directory: backend
+        run: |
+          cargo fmt --check
+          cargo test --locked
       - name: Check manifest and build the archive
         run: node scripts/package.mjs
       - name: Validate against Lithe Store rules

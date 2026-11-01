@@ -11,13 +11,19 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # The archive carries a universal macOS backend built with lipo and codesign.
+    runs-on: macos-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Add the Intel target
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - name: Test the backend
+        working-directory: backend
+        run: cargo test --locked
       - name: Build archive
         run: node scripts/package.mjs --expect-tag "$GITHUB_REF_NAME" | tee "$RUNNER_TEMP/checksums.txt"
       - name: Publish release
