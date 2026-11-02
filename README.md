@@ -54,6 +54,7 @@ Lithe 需要知道某个工具有哪些版本时，向插件后端 `bin/mise-pro
 
 - **协商**：初始化时，Lithe 在 `capabilities.experimental.litheToolchains` 中提供 `{versions: [1], providers: ["mise"]}`。只有提供里同时有版本 1 和 `mise`，后端才回答 `{version: 1, providers: ["mise"]}`；否则不声明，也不接受查询。
 - **查询范围**：`workspace: null` 的查询只返回已安装版本和全局要求；工作区查询还会返回项目要求。
+- **请求 ID**：Lithe 发出的 `toolchains/query` 请求 ID 是十进制数字字符串（如 `"5"`），而它校验答复时只接受数字 ID，所以后端对这种 ID 用对应的数字作答（`"5"` → `5`），`$/cancelRequest` 里的 `"5"` 也取消同一个查询。其他 ID 原样回传。
 - **监听**：`watch` 列出三类路径，任何一个变化，Lithe 都会整体重新查询：
   - 来源文件；
   - 全局配置：`~/.config/mise/config.toml`、`config.local.toml`、`conf.d`、`~/.tool-versions` 等；
@@ -115,7 +116,7 @@ cd .. && node scripts/package.mjs
 2. 推送同名标签：
 
    ```bash
-   git tag v0.2.0 && git push origin v0.2.0
+   git tag v0.2.1 && git push origin v0.2.1
    ```
 
 3. `Release` 工作流会核对标签与版本一致，运行测试，打包并发布 Release（说明里附 SHA-256）。

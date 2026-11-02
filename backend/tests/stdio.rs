@@ -579,6 +579,35 @@ fn cancellation_kills_the_running_mise_and_answers_cancelled() {
 }
 
 #[test]
+fn lithe_string_ids_get_numeric_replies_and_still_cancel() {
+    // Lithe writes `"id": "<n>"`; its decodeReply matches only a numeric reply ID.
+    let fixture = Fixture::new();
+    let mut backend = fixture.start(&[]);
+    backend.initialize();
+    let mut answered = request(0, Value::Null, &["java"]);
+    answered["id"] = json!("25");
+    backend.send(answered);
+    let reply = backend.receive();
+    assert_eq!(reply["id"], 25);
+    assert!(reply["result"].is_object(), "{reply}");
+
+    fixture.write("fake/hang", "");
+    let mut hanging = request(26, Value::Null, &["java"]);
+    hanging["id"] = json!("26");
+    backend.send(hanging);
+    let pid_file = fixture.path("fake/hang.pid");
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while !pid_file.exists() && Instant::now() < deadline {
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    backend.send(json!({"jsonrpc": "2.0", "method": "$/cancelRequest", "params": {"id": "26"}}));
+    let reply = backend.receive();
+    assert_eq!(reply["id"], 26);
+    assert_eq!(reply["error"]["data"]["code"], "plugin.toolchain.cancelled");
+    assert_eq!(backend.stop(), 0);
+}
+
+#[test]
 fn a_slow_mise_times_out_and_closing_stdin_leaves_no_child() {
     let fixture = Fixture::new();
     fixture.write("fake/hang", "");
