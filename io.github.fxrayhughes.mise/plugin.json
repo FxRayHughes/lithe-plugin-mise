@@ -45,6 +45,7 @@
       "tools": [
         "go",
         "gradle",
+        "io.github.lithe-idea.maven-build:maven",
         "java",
         "maven",
         "node",

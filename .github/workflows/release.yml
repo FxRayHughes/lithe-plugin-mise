@@ -42,4 +42,6 @@ jobs:
             sed 's#^dist/##' "$RUNNER_TEMP/checksums.txt"
             echo '```'
           } > "$RUNNER_TEMP/notes.md"
-          gh release create "$GITHUB_REF_NAME" dist/*.zip --title "mise $GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md"
+          # Pre-release until a stable Lithe hosts toolchainProviders (Lithe Store
+          # docs/publishing.md); the index entry is then submitted by hand.
+          gh release create "$GITHUB_REF_NAME" dist/*.zip --prerelease --title "mise $GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md"

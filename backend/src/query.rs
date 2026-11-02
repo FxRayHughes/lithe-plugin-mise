@@ -46,10 +46,17 @@ pub const WATCH_FILES: &[(&str, &str)] = &[
 
 /// Tool ID, the names mise may list it under, and the programs that prove an
 /// installation is complete. Core rejects a whole reply over one home without
-/// its executable, so a broken install must not be reported.
+/// its executable, so a broken install must not be reported. A community
+/// plugin defines its tool under its own qualified ID, so one mise name may
+/// answer several IDs.
 const TOOLS: &[(&str, &[&str], &[&str])] = &[
     ("go", &["go", "core:go"], &["go"]),
     ("gradle", &["gradle", "aqua:gradle/gradle"], &["gradle"]),
+    (
+        "io.github.lithe-idea.maven-build:maven",
+        &["maven", "aqua:apache/maven"],
+        &["mvn"],
+    ),
     ("java", &["java", "core:java"], &["java"]),
     ("maven", &["maven", "aqua:apache/maven"], &["mvn"]),
     ("node", &["node", "nodejs", "core:node"], &["node"]),
@@ -187,10 +194,13 @@ impl Query {
 
         let entries = self.installed_entries(&installed);
         // A bounded command line; later entries fall back to `<install>/bin`.
+        // One install serving several tool IDs is asked about once.
+        let mut asked = BTreeSet::new();
         let arguments: Vec<String> = entries
             .iter()
-            .take(MAX_INSTALLATIONS)
             .map(|entry| format!("{}@{}", entry.name, entry.version))
+            .filter(|argument| asked.insert(argument.clone()))
+            .take(MAX_INSTALLATIONS)
             .collect();
         let bin_directories = if arguments.is_empty() {
             Vec::new()
@@ -289,11 +299,12 @@ impl Query {
             .as_object()
             .into_iter()
             .flat_map(|object| object.keys())
-            .filter_map(|name| {
-                let tool = TOOLS.iter().find(|tool| tool.1.contains(&name.as_str()))?;
-                self.tools
-                    .contains(tool.0)
-                    .then_some((name.as_str(), tool.0))
+            .flat_map(|name| {
+                TOOLS
+                    .iter()
+                    .filter(move |tool| tool.1.contains(&name.as_str()))
+                    .filter(|tool| self.tools.contains(tool.0))
+                    .map(move |tool| (name.as_str(), tool.0))
             })
     }
 

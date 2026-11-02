@@ -460,6 +460,45 @@ fn workspace_query_reports_project_requests_with_sources_and_readers() {
 }
 
 #[test]
+fn a_community_tool_id_gets_the_same_maven_answer() {
+    const COMMUNITY_MAVEN: &str = "io.github.lithe-idea.maven-build:maven";
+    let fixture = Fixture::new();
+    let mut backend = fixture.start(&[]);
+    backend.initialize();
+    let reply = backend.query(
+        8,
+        workspace(&fixture, "project", "app"),
+        &[COMMUNITY_MAVEN, "maven"],
+    );
+    let result = &reply["result"];
+    let home = installed(&fixture, "maven/3.9.16/apache-maven-3.9.16");
+    for tool in [COMMUNITY_MAVEN, "maven"] {
+        let installations = by_tool(&result["installations"], tool);
+        assert_eq!(installations.len(), 1, "{tool}: {installations:?}");
+        assert_eq!(installations[0]["home"], home);
+        let statement = by_tool(&result["statements"], tool)
+            .into_iter()
+            .find(|s| s["scope"] == "project")
+            .unwrap();
+        assert_eq!(statement["request"], "3");
+        assert_eq!(statement["installation"], home);
+    }
+    let calls = fixture.calls();
+    assert_eq!(
+        calls.matches("maven@3.9.16").count(),
+        1,
+        "one install is asked about once: {calls}"
+    );
+    let reply = backend.query(9, Value::Null, &[COMMUNITY_MAVEN]);
+    assert!(by_tool(&reply["result"]["installations"], "maven").is_empty());
+    assert_eq!(
+        by_tool(&reply["result"]["installations"], COMMUNITY_MAVEN).len(),
+        1
+    );
+    assert_eq!(backend.stop(), 0);
+}
+
+#[test]
 fn untrusted_workspace_fails_but_global_queries_still_work() {
     let fixture = Fixture::new();
     let mut backend = fixture.start(&[]);

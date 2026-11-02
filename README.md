@@ -19,6 +19,10 @@ Lithe 需要知道某个工具有哪些版本时，向插件后端 `bin/mise-pro
 | `mise ls --json --global` | `$HOME` | 全局配置的要求 |
 | `mise bin-paths <tool>@<version>…` | `$HOME` | 真实 home（例如 Maven 的 `apache-maven-3.9.16/`） |
 
+- Lithe 只询问有插件定义的工具（`toolDefinitions`）。插件按工具 ID 回答：
+  - `java`、`node`、`go`、`gradle`、`maven`、`pnpm`、`python` 是官方插件使用的短 ID；
+  - `io.github.lithe-idea.maven-build:maven` 是 [Maven 插件](https://github.com/Lithe-IDEA/lithe-plugin-maven)定义的 Maven，和 `maven` 得到相同的答复。
+  - 没有插件定义的 ID 不会被询问，所以多声明一个 ID 没有副作用。
 - 版本怎么选，以及 `lts`、`latest`、前缀、`conf.d`、`MISE_ENV` 怎么解释，全部由 mise 决定。插件不读 mise 的配置文件，也不实现 mise 的任何规则。
 - 最终用哪个版本由 Lithe 按「固定值 → 项目要求 → 全局 → 自动」决定，插件只报告事实。
 - 要求了但没装的版本，答复里的 `installation` 为 `null`，Lithe 会提示「未满足」。插件不会替你安装。
@@ -73,8 +77,13 @@ Lithe 需要知道某个工具有哪些版本时，向插件后端 `bin/mise-pro
 
 ## 安装
 
-需要带工具链提供方框架的 Lithe，即 `toolchainProviders` 能力：[1lck/Lithe-IDEA#1581](https://github.com/1lck/Lithe-IDEA/pull/1581) 加上之后的查询客户端。
-不支持的 Lithe 版本会在插件市场中隐藏本插件。安装时，安装审查会列出后端程序 `bin/mise-provider`。
+需要宿主支持 `toolchainProviders` 能力的 Lithe：
+- 查询客户端已随 [1lck/Lithe-IDEA#1581](https://github.com/1lck/Lithe-IDEA/pull/1581) 合入 `preview`；
+- macOS 宿主能力表登记 `toolchainProviders` 由 [#1558](https://github.com/1lck/Lithe-IDEA/pull/1558) 完成。
+
+在此之前，插件市场会显示“需要更新 Lithe”，不会安装。所以在稳定版 Lithe 支持之前，本插件以**预发布**收录。
+另外，还要有插件定义被询问的工具（例如带 `toolDefinitions` 的 Java Support），mise 才有可回答的对象。
+安装时，安装审查会列出后端程序 `bin/mise-provider`。
 
 1. 在 Lithe 中打开 **设置 → 插件 → 插件市场**，搜索 “mise”，安装并确认。
 2. 打开项目后，运行环境设置里会出现来自 mise 的版本。
@@ -111,7 +120,10 @@ cd .. && node scripts/package.mjs
 
 3. `Release` 工作流会核对标签与版本一致，运行测试，打包并发布 Release（说明里附 SHA-256）。
    已存在的 Release 不会被覆盖，因为 Lithe Store 固定了资产的 SHA-256。
-4. Lithe Store 的自动追踪会在 6 小时内发现新版本并开合并请求。合并后，用户即可在 Lithe 中更新。
+4. 稳定版 Lithe 支持 `toolchainProviders` 之前，工作流把 Release 标为**预发布**。
+   - 自动追踪会跳过预发布，所以要按 Lithe Store 的 `docs/publishing.md` 手工提交索引条目（新版本在前）。
+   - 稳定版支持之后，去掉工作流里的 `--prerelease`，把最新 Release 转为正式发布。
+   - 之后，Lithe Store 的自动追踪会在 6 小时内发现新版本并开合并请求。合并后，用户即可在 Lithe 中更新。
 
 ## 许可
 
