@@ -89,6 +89,22 @@ Lithe 需要知道某个工具有哪些版本时，向插件后端 `bin/mise-pro
 1. 在 Lithe 中打开 **设置 → 插件 → 插件市场**，搜索 “mise”，安装并确认。
 2. 打开项目后，运行环境设置里会出现来自 mise 的版本。
 
+## 效果
+
+以下截图来自带 #1558 宿主能力的 Lithe 开发构建。示例项目根目录的 `mise.toml` 要求 `java = "17"`，
+子目录 `sub/.tool-versions` 要求 `java 21`，全局 mise 配置为 Java 25。
+
+| 截图 | 内容 |
+| --- | --- |
+| [项目根目录](docs/screenshots/02-root-java17.png) | 运行环境显示 JDK 17.0.2，版本文件为 `mise.toml` |
+| [子目录与全局](docs/screenshots/03-sub-java21-global25.png) | `sub` 使用 `.tool-versions` 的 21.0.2；解析链里全局默认为 mise 25 → 25.0.2 |
+| [改为 21](docs/screenshots/04-reread-root-java21.png) | 把 `mise.toml` 改成 `java = "21"`，无需刷新即显示 21.0.2 |
+| [改回 17](docs/screenshots/05-reread-root-java17.png) | 改回 17 后恢复为 17.0.2 |
+| [环境来源](docs/screenshots/06-environment-sources.png) | 版本管理器列出 mise · JDK · 2 个版本文件 |
+| [插件市场](docs/screenshots/01-store-update-0.2.1.png) | 从插件市场更新到 0.2.1 |
+
+![运行环境：子目录使用 .tool-versions 的 JDK 21，全局为 mise 的 Java 25](docs/screenshots/03-sub-java21-global25.png)
+
 ## 开发
 
 需要：
