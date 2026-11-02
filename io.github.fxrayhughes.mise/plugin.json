@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "id": "io.github.fxrayhughes.mise",
   "displayName": "mise",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "pluginAPIVersion": 3,
   "requires": {
     "toolchainProviders": 1,

@@ -91,7 +91,7 @@ fn serve(options: Options) -> i32 {
         match (method, id) {
             ("exit", _) => break if shutting_down { 0 } else { 1 },
             ("$/cancelRequest", _) => {
-                let key = message["params"]["id"].to_string();
+                let key = reply_id(&message["params"]["id"]).to_string();
                 if let Some(flag) = active.lock().unwrap().get(&key) {
                     flag.store(true, Ordering::SeqCst);
                 }
@@ -115,6 +115,7 @@ fn serve(options: Options) -> i32 {
                 write_result(&output, &id, Value::Null);
             }
             ("toolchains/query", Some(id)) => {
+                let id = reply_id(&id);
                 if !negotiated || shutting_down {
                     let failure = Failure::new(
                         -32601,
@@ -140,6 +141,23 @@ fn serve(options: Options) -> i32 {
     };
     stop_all(&active);
     status
+}
+
+/// The ID a query reply carries. Lithe writes `toolchains/query` IDs as decimal
+/// strings such as `"5"`, but `toolchains.decodeReply` only matches a numeric reply
+/// ID, so such an ID is answered as the number it spells; `$/cancelRequest` maps its
+/// ID the same way to find the query. Every other ID is echoed as sent.
+fn reply_id(id: &Value) -> Value {
+    match id.as_str() {
+        Some(text)
+            if !text.is_empty()
+                && text.bytes().all(|byte| byte.is_ascii_digit())
+                && !(text.len() > 1 && text.starts_with('0')) =>
+        {
+            text.parse::<u64>().map_or_else(|_| id.clone(), Value::from)
+        }
+        _ => id.clone(),
+    }
 }
 
 /// Whether the host's offer contains protocol version 1 and this provider.
@@ -339,6 +357,22 @@ mod tests {
         assert!(parse(&["--mise=/x"]).is_err());
         assert!(parse(&["--stdio", "--offline=maybe"]).is_err());
         assert!(parse(&["--stdio", "--other"]).is_err());
+    }
+
+    #[test]
+    fn decimal_string_ids_are_answered_as_numbers() {
+        assert_eq!(reply_id(&json!("5")), json!(5));
+        assert_eq!(reply_id(&json!("0")), json!(0));
+        assert_eq!(reply_id(&json!(7)), json!(7));
+        for kept in [
+            json!("05"),
+            json!("x1"),
+            json!("-1"),
+            json!(""),
+            json!("18446744073709551616"),
+        ] {
+            assert_eq!(reply_id(&kept), kept);
+        }
     }
 
     #[test]
