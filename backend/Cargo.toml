@@ -1,0 +1,23 @@
+[package]
+name = "mise-provider"
+version = "0.2.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Answers Lithe toolchains/query from mise's own machine-readable output"
+publish = false
+
+[[bin]]
+name = "mise-provider"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = "1"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[workspace]
