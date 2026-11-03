@@ -78,20 +78,32 @@ Lithe 需要知道某个工具有哪些版本时，向插件后端 `bin/mise-pro
 
 ## 安装
 
-需要宿主支持 `toolchainProviders` 能力的 Lithe：
-- 查询客户端已随 [1lck/Lithe-IDEA#1581](https://github.com/1lck/Lithe-IDEA/pull/1581) 合入 `preview`；
-- macOS 宿主能力表登记 `toolchainProviders` 由 [#1558](https://github.com/1lck/Lithe-IDEA/pull/1558) 完成。
+需要 macOS 宿主支持 `toolchainProviders` 1 和 `backend` 2 的 Lithe。
 
-在此之前，插件市场会显示“需要更新 Lithe”，不会安装。所以在稳定版 Lithe 支持之前，本插件以**预发布**收录。
-另外，还要有插件定义被询问的工具（例如带 `toolDefinitions` 的 Java Support），mise 才有可回答的对象。
+| Lithe | 能否安装 |
+| --- | --- |
+| 稳定版 0.6.6 及更早 | 不能。插件市场显示“不支持 / 该插件需要更新版本的 Lithe” |
+| [AutoBuild](https://github.com/1lck/Lithe-IDEA/releases/tag/AutoBuild) Build `20261103.104638` 及之后 | 能 |
+| 之后的稳定版 | 以发行说明为准 |
+
+- 查询客户端随 [1lck/Lithe-IDEA#1581](https://github.com/1lck/Lithe-IDEA/pull/1581) 合入 `preview`。
+- macOS 宿主能力表登记 `toolchainProviders` 由 [#1661](https://github.com/1lck/Lithe-IDEA/pull/1661) 完成，2026-11-02 合入 `preview`。
+- 所以在稳定版 Lithe 包含 #1661 之前，本插件以**预发布**收录。
+
 安装时，安装审查会列出后端程序 `bin/mise-provider`。
 
-1. 在 Lithe 中打开 **设置 → 插件 → 插件市场**，搜索 “mise”，安装并确认。
-2. 打开项目后，运行环境设置里会出现来自 mise 的版本。
+1. 在 Lithe 中打开 **设置 → 插件 → 插件市场**，搜索 “mise”，安装并确认，然后重启 Lithe。
+2. 打开项目后，**设置 → 构建、执行、部署 → 运行环境 / 环境来源** 里会出现来自 mise 的版本。
+
+> **能装上，但运行环境里可能还看不到版本。**
+> Lithe 只向 mise 询问有插件定义的工具（`toolDefinitions`），定义来自其他插件，不来自本插件。
+> 截至 2026-11-03，`preview` 自带的 Java Support 1.1.0 还没有 JDK 的工具定义，它在 [#1558](https://github.com/1lck/Lithe-IDEA/pull/1558) 里（仍是 Draft）。
+> 插件市场里也还没有提供工具定义的插件。这时 mise 已安装、后端正常，但没有可回答的工具，所以运行环境页不会列出 mise 的版本。
+> 带工具定义的插件发布后，不需要更新本插件，对应的工具会自动出现。
 
 ## 效果
 
-以下截图来自带 #1558 宿主能力的 Lithe 开发构建。示例项目根目录的 `mise.toml` 要求 `java = "17"`，
+以下截图来自 Lithe 开发构建：宿主能力等同 #1661，Java Support 加上了 #1558 的 JDK 工具定义。示例项目根目录的 `mise.toml` 要求 `java = "17"`，
 子目录 `sub/.tool-versions` 要求 `java 21`，全局 mise 配置为 Java 25。
 
 | 截图 | 内容 |
@@ -137,7 +149,7 @@ cd .. && node scripts/package.mjs
 
 3. `Release` 工作流会核对标签与版本一致，运行测试，打包并发布 Release（说明里附 SHA-256）。
    已存在的 Release 不会被覆盖，因为 Lithe Store 固定了资产的 SHA-256。
-4. 稳定版 Lithe 支持 `toolchainProviders` 之前，工作流把 Release 标为**预发布**。
+4. 稳定版 Lithe 包含 #1661 之前，工作流把 Release 标为**预发布**。
    - 自动追踪会跳过预发布，所以要按 Lithe Store 的 `docs/publishing.md` 手工提交索引条目（新版本在前）。
    - 稳定版支持之后，去掉工作流里的 `--prerelease`，把最新 Release 转为正式发布。
    - 之后，Lithe Store 的自动追踪会在 6 小时内发现新版本并开合并请求。合并后，用户即可在 Lithe 中更新。
